@@ -1,11 +1,16 @@
 {
-    "name": "pluk77/symfony-sphinx-bundle",
+    "name": "rsemizarov/symfony-sphinx-bundle",
     "type": "symfony-bundle",
-    "description": "Provides integration of Sphinx search engine with Symfony4 using SphinxQL",
+    "description": "Provides integration of Sphinx search engine with Symfony5 using SphinxQL",
     "keywords": ["sphinx", "sphinxql", "search", "symfony", "symfony4", "doctrine2"],
-    "homepage": "https://github.com/pluk77",
+    "homepage": "https://github.com/rsemizarov",
     "license": "MIT",
     "authors": [
+        {
+            "name": "Roman Semizarov",
+            "email": "semizarov@gmail.com",
+            "homepage": "https://github.com/rsemizarov"
+        },
 		{
             "name": "Marcel Berteler",
             "email": "pluk77@gmail.com",
@@ -30,11 +35,6 @@
     "autoload": {
         "psr-4": {
             "Pluk77\\SymfonySphinxBundle\\": ""
-        }
-    },
-    "extra": {
-        "branch-alias": {
-            "dev-master": "1.0.x-dev"
         }
     }
 }

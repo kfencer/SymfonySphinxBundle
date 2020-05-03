@@ -22,8 +22,20 @@ Installation
 ------------
 
 Install the bundle using composer:
+Add to composer.json
+```json
+{
+    "repositories": [
+        {
+            "type": "git",
+            "url": "https://github.com/rsemizarov/SymfonySphinxBundle"
+        }
+    ]
+}
+```
+
 ```sh
-composer require pluk77/symfony-sphinx-bundle
+composer require rsemizarov/symfony-sphinx-bundle
 ```
 
 Configuration
