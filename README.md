@@ -3,7 +3,7 @@ SymfonySphinxBundle
 
 Forked from javer/JaverSphinxBundle
 
-This bundle provides integration of [Sphinx](http://sphinxsearch.com) search engine with Symfony4.
+This bundle provides integration of [Sphinx](http://sphinxsearch.com) search engine with Symfony5.
 
 Features:
 - SphinxQL Query Builder
@@ -28,7 +28,7 @@ Add to composer.json
     "repositories": [
         {
             "type": "git",
-            "url": "https://github.com/rsemizarov/SymfonySphinxBundle"
+            "url": "https://github.com/knifefencer/SymfonySphinxBundle"
         }
     ]
 }
@@ -68,6 +68,7 @@ $results = $sphinx->createQuery()
     ->andWhere('column5', [5, '6'])
     ->andWhere('column6', 'NOT IN', [7, '8'])
     ->andWhere('column7', 'BETWEEN', [9, 10])
+    ->andRawWhere('column8 > 2')
     ->match('column8', 'value2')
     ->andMatch(['column9', 'column10'], 'value3')
     ->groupBy('column11')
