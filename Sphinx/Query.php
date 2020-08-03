@@ -230,30 +230,36 @@ class Query
      *
      * @throws \InvalidArgumentException
      */
-    protected function createCondition(string $column, $operator, $value = null)
+    protected function createCondition(?string $column, $operator, $value = null, string $rawExpression = null)
     {
         $this->_state = self::STATE_DIRTY;
-        
-        if (is_null($value)) {
-            $value = $operator;
-            $operator = is_array($value) ? 'IN' : '=';
+
+        if ($rawExpression) {
+            $column = null;
+            $operator = null;
+            $value = null;
+        } else {
+            if (is_null($value)) {
+                $value = $operator;
+                $operator = is_array($value) ? 'IN' : '=';
+            }
+
+            $operator = strtoupper($operator);
+
+            if (!in_array($operator, static::CONDITION_OPERATORS)) {
+                throw new \InvalidArgumentException(sprintf('Invalid operator %s', $operator));
+            }
+
+            if ($operator === 'BETWEEN' && (!is_array($value) || count($value) != 2)) {
+                throw new \InvalidArgumentException('BETWEEN operator expects an array with exactly 2 values');
+            }
+
+            if (in_array($operator, ['IN', 'NOT IN']) && !is_array($value)) {
+                throw new \InvalidArgumentException('IN operator expects an array with values');
+            }
         }
 
-        $operator = strtoupper($operator);
-
-        if (!in_array($operator, static::CONDITION_OPERATORS)) {
-            throw new \InvalidArgumentException(sprintf('Invalid operator %s', $operator));
-        }
-
-        if ($operator === 'BETWEEN' && (!is_array($value) || count($value) != 2)) {
-            throw new \InvalidArgumentException('BETWEEN operator expects an array with exactly 2 values');
-        }
-
-        if (in_array($operator, ['IN', 'NOT IN']) && !is_array($value)) {
-            throw new \InvalidArgumentException('IN operator expects an array with values');
-        }
-
-        return [$column, $operator, $value];
+        return [$column, $operator, $value, $rawExpression];
     }
 
     /**
@@ -281,7 +287,7 @@ class Query
      */
     public function andRawWhere(string $expression)
     {
-        $this->where[] = [$expression, null, null];
+        $this->where[] = $this->createCondition(null, null, null, $expression);
 
         return $this;
     }
@@ -641,16 +647,20 @@ class Query
     {
         $pieces = [];
 
-        foreach ($conditions as [$column, $operator, $value]) {
-            if ($operator === 'BETWEEN') {
-                $value = $this->quoteValue($value[0]) . ' AND ' . $this->quoteValue($value[1]);
-            } elseif (is_array($value)) {
-                $value = '(' . implode(', ', array_map([$this, 'quoteValue'], $value)) . ')';
+        foreach ($conditions as [$column, $operator, $value, $rawExpression]) {
+            if ($rawExpression) {
+                $pieces[] = $rawExpression;
             } else {
-                $value = $this->quoteValue($value);
-            }
+                if ($operator === 'BETWEEN') {
+                    $value = $this->quoteValue($value[0]) . ' AND ' . $this->quoteValue($value[1]);
+                } elseif (is_array($value)) {
+                    $value = '(' . implode(', ', array_map([$this, 'quoteValue'], $value)) . ')';
+                } else {
+                    $value = $this->quoteValue($value);
+                }
 
-            $pieces[] = $column . ' ' . $operator . ' ' . $value;
+                $pieces[] = $column . ' ' . $operator . ' ' . $value;
+            }
         }
 
         return implode(' AND ', $pieces);
