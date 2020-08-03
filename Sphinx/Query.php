@@ -271,6 +271,20 @@ class Query
 
         return $this;
     }
+
+    /**
+     * Add WHERE raw expression.
+     *
+     * @param string $expression
+     *
+     * @return Query
+     */
+    public function andRawWhere(string $expression)
+    {
+        $this->where[] = [$expression, null, null];
+
+        return $this;
+    }
     
     /**
      * WHERE clause.

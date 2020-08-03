@@ -1,11 +1,16 @@
 {
-    "name": "rsemizarov/symfony-sphinx-bundle",
+    "name": "knifefencer/symfony-sphinx-bundle",
     "type": "symfony-bundle",
     "description": "Provides integration of Sphinx search engine with Symfony5 using SphinxQL",
     "keywords": ["sphinx", "sphinxql", "search", "symfony", "symfony4", "doctrine2"],
-    "homepage": "https://github.com/rsemizarov",
+    "homepage": "https://github.com/knifefencer",
     "license": "MIT",
     "authors": [
+        {
+            "name": "Alexey Khokhlov",
+            "email": "owlet@docfile.org",
+            "homepage": "https://github.com/knifefencer"
+        },
         {
             "name": "Roman Semizarov",
             "email": "semizarov@gmail.com",
