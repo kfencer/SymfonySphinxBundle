@@ -309,6 +309,36 @@ class Query
     }
 
     /**
+     * @param string[] $orComponents
+     *
+     * @return Query
+     */
+    protected function orWhere(array $orComponents)
+    {
+        static $index = 0;
+
+        if ($orComponents) {
+            $alias = 'orX' . $index++;
+
+            foreach ($orComponents as $key => $component) {
+                if (strpos($component, ' AND ')) {
+                    $orComponents[$key] = "($component)";
+                }
+            }
+
+            $select = count($orComponents) > 1
+                ? '(' . implode(' OR ', $orComponents) . ')'
+                : array_pop($orComponents)
+            ;
+
+            $this->select($select . ' AS ' . $alias);
+            $this->andWhere($alias, '=', 1);
+        }
+
+        return $this;
+    }
+
+    /**
      * Add MATCH clause.
      *
      * @param string|string[] $column

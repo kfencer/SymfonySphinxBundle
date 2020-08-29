@@ -68,6 +68,11 @@ $results = $sphinx->createQuery()
     ->andWhere('column5', [5, '6'])
     ->andWhere('column6', 'NOT IN', [7, '8'])
     ->andWhere('column7', 'BETWEEN', [9, 10])
+    ->orWhere([
+        'column20 < 5',
+        'column21 = 5',
+        'column22 > 5'
+    ])
     ->andRawWhere('column8 > 2')
     ->match('column8', 'value2')
     ->andMatch(['column9', 'column10'], 'value3')
