@@ -313,7 +313,7 @@ class Query
      *
      * @return Query
      */
-    protected function orWhere(array $orComponents)
+    public function orWhere(array $orComponents)
     {
         static $index = 0;
 
