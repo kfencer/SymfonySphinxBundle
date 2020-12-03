@@ -572,13 +572,10 @@ class Query
      */
     public function quoteValue($value, $type = null)
     {
-        if (is_int($value) || (is_string($value) && strval(intval($value)) === $value)) {
-            return (int) $value;
-        } elseif (is_bool($value)) {
-            return (int) $value;
-        } else {
-            return $this->connection->quote($value, $type);
-        }
+        return is_int($value) || is_bool($value)
+            ? (int) $value
+            : $this->connection->quote($value, $type)
+        ;
     }
 
     /**
