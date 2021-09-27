@@ -15,9 +15,9 @@ use PDOStatement;
 class Query
 {
     protected const CONDITION_OPERATORS = ['=', '!=', '<', '>', '<=', '>=', 'IN', 'NOT IN', 'BETWEEN'];
-    
+
     const META_STATEMENT = 'SHOW META';
-    
+
     /**
      * A query object is in CLEAN state when it has NO unparsed/unprocessed DQL parts.
      */
@@ -29,7 +29,7 @@ class Query
      * is called.
      */
     const STATE_DIRTY = 2;
-    
+
     /**
      * The current state of this query.
      *
@@ -86,6 +86,11 @@ class Query
      * @var array
      */
     protected $match = [];
+
+    /**
+     * @var array
+     */
+    protected $rawMatch = [];
 
     /**
      * @var array
@@ -291,7 +296,50 @@ class Query
 
         return $this;
     }
-    
+
+    /**
+     * Add AND MATCH clause without pre-processing.
+     *
+     * @param string $match
+     *
+     * @return Query
+     */
+    public function andRawMatch(string $match): Query
+    {
+        $this->_state = self::STATE_DIRTY;
+        $this->rawMatch[] = [$match, '&'];
+
+        return $this;
+    }
+
+    /**
+     * Add OR MATCH clause without pre-processing.
+     *
+     * @param string $match
+     *
+     * @return Query
+     */
+    public function orRawMatch(string $match): Query
+    {
+        $this->_state = self::STATE_DIRTY;
+        $this->rawMatch[] = [$match, '|'];
+
+        return $this;
+    }
+
+    /**
+     * MATCH clause without pre-processing
+     *
+     * @param string $match
+     * @return Query
+     */
+    public function rawMatch(string $match): Query
+    {
+        $this->match = [];
+
+        return $this->andRawMatch($match);
+    }
+
     /**
      * WHERE clause.
      *
@@ -354,7 +402,7 @@ class Query
 
         return $this;
     }
-    
+
     /**
      * MATCH clause.
      *
@@ -367,7 +415,7 @@ class Query
     public function match($column, $value, bool $safe = false)
     {
         $this->match = [];
-        
+
         return $this->andMatch($column, $value, $safe);
     }
 
@@ -385,7 +433,7 @@ class Query
 
         return $this;
     }
-    
+
     /**
      * GROUP BY column.
      *
@@ -396,7 +444,7 @@ class Query
     public function groupBy(string $column)
     {
         $this->groupBy = [];
-        
+
         return $this->andGroupBy($column);
     }
 
@@ -418,7 +466,7 @@ class Query
 
         return $this;
     }
-    
+
     /**
      * Within group order by column.
      *
@@ -430,7 +478,7 @@ class Query
     public function withinGroupOrderBy(string $column, $direction = null)
     {
         $this->withinGroupOrderBy = [];
-        
+
         return $this->andWithinGroupOrderBy($column, $direction);
     }
 
@@ -449,7 +497,7 @@ class Query
 
         return $this;
     }
-    
+
     /**
      * HAVING clause.
      *
@@ -462,7 +510,7 @@ class Query
     public function having(string $column, $operator, $value = null)
     {
         $this->having = [];
-        
+
         return $this->andHaving($column, $operator, $value);
     }
 
@@ -484,7 +532,7 @@ class Query
 
         return $this;
     }
-    
+
     /**
      * ORDER BY column.
      *
@@ -496,7 +544,7 @@ class Query
     public function orderBy(string $column, $direction = null)
     {
         $this->orderBy = [];
-        
+
         return $this->andOrderBy($column, $direction);
     }
 
@@ -514,7 +562,7 @@ class Query
 
         return $this;
     }
-    
+
     /**
      * Sets the maximum number of results to retrieve (the "limit").
      *
@@ -545,7 +593,7 @@ class Query
 
         return $this;
     }
-    
+
     /**
      * Set option.
      *
@@ -601,7 +649,7 @@ class Query
         if($this->_state === self::STATE_CLEAN && $this->query) {
             return $this->query;
         }
-        
+
         $this->query = $this->buildQuery();
 
         return $this->query;
@@ -623,7 +671,7 @@ class Query
         if (!$this->from) {
             throw new \InvalidArgumentException('You should add at least one FROM clause');
         }
-                
+
         $clauses = [];
 
         $clauses[] = 'SELECT ' . implode(', ', $this->select);
@@ -634,8 +682,8 @@ class Query
             $clauses[] = 'WHERE ' . $this->buildCondition($this->where);
         }
 
-        if ($this->match) {
-            $clauses[] = ($this->where ? 'AND ' : 'WHERE ') . $this->buildMatch($this->match);
+        if ($this->match || $this->rawMatch) {
+            $clauses[] = ($this->where ? 'AND ' : 'WHERE ') . $this->buildMatch($this->match, $this->rawMatch);
         }
 
         if ($this->groupBy) {
@@ -700,7 +748,7 @@ class Query
      *
      * @return string
      */
-    protected function buildMatch(array $matches): string
+    protected function buildMatch(array $matches, array $rawMatches = []): string
     {
         $pieces = [];
 
@@ -716,6 +764,14 @@ class Query
             }
 
             $pieces[] = sprintf('@%s %s', $column, $value);
+        }
+
+        foreach ($rawMatches as [$match, $andOr]) {
+            if (count($pieces)) {
+                $pieces[] = sprintf('%s %s', $andOr, $match);
+            } else {
+                $pieces[] = sprintf('%s', $match, true);
+            }
         }
 
         return sprintf('MATCH(%s)', $this->quoteValue(implode(' ', $pieces)));
@@ -767,7 +823,7 @@ class Query
         if($this->_state === self::STATE_CLEAN) {
             return $this->results;
         }
-        
+
         $this->execute();
 
         return $this->results;
@@ -783,7 +839,7 @@ class Query
         if($this->_state === self::STATE_CLEAN) {
             return $this->numRows;
         }
-                
+
         $startTime = microtime(true);
 
         $this->results = [];
@@ -798,9 +854,9 @@ class Query
             $this->numRows = $stmt->rowCount();
 
             $stmt->closeCursor();
-            
+
             $this->_state = self::STATE_CLEAN;
-            
+
             $this->populateMetadata();
         }
 
@@ -812,7 +868,7 @@ class Query
         if ($this->queryBuilder) {
             $this->results = $this->applyQueryBuilder($this->results);
         }
-        
+
         return $this->numRows;
     }
 
@@ -885,9 +941,9 @@ class Query
 
         return array_values($results);
     }
-    
+
     private function populateMetadata() {
-        
+
         $this->metadata = [];
         $stmt = $this->createStatement(self::META_STATEMENT);
 
@@ -909,11 +965,11 @@ class Query
         if (!is_null($this->metadata)) {
             return $this->metadata;
         }
-        
+
         if (is_null($this->results)) {
             throw new \BadMethodCallException('You can get metadata only after executing query');
         }
-        
+
         return [];
     }
 
@@ -951,7 +1007,7 @@ class Query
     {
         return (float) $this->getMetadataValue('time', 0);
     }
-    
+
     public function clearResult() {
         $this->_state = self::STATE_DIRTY;
         $this->query = null;
