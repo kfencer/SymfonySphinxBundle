@@ -47,7 +47,9 @@ class QueryTest extends \PHPUnit_Framework_TestCase
     public function testSelectQuery()
     {
         $actualSql = $this->createQuery()
-            ->select('id', 'column1', 'column2', 'WEIGHT() as weight')
+            ->select('id', 'column1', 'column2')
+            ->addSelectIfNotExists('id')
+            ->Quer('WEIGHT() as weight')
             ->from('index1', 'index2')
             ->where('column3', 'value1')
             ->andWhere('column4', '>', 4)

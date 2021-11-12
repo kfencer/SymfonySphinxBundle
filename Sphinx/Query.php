@@ -210,6 +210,23 @@ class Query
     }
 
     /**
+     * Add single column into SELECT clause.
+     *
+     * @param string $column
+     *
+     * @return Query
+     */
+    public function addSelectIfNotExists($column)
+    {
+        if (!in_array($column, $this->select, true)) {
+            $this->_state = self::STATE_DIRTY;
+            $this->select[] = $column;
+        }
+
+        return $this;
+    }
+
+    /**
      * Add FROM clause.
      *
      * @param array ...$indexes
