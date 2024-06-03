@@ -631,7 +631,7 @@ class Query
      * Quote value.
      *
      * @param mixed  $value
-     * @param string $type
+     * @param int|null $type
      *
      * @return string|integer|boolean
      */
@@ -639,7 +639,7 @@ class Query
     {
         return is_int($value) || is_bool($value)
             ? (int) $value
-            : $this->connection->quote($value, $type)
+            : (is_int($type) ? $this->connection->quote($value, $type) : $this->connection->quote($value))
         ;
     }
 
