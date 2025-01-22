@@ -4,6 +4,7 @@ namespace Pluk77\SymfonySphinxBundle\Sphinx;
 
 use Pluk77\SymfonySphinxBundle\Logger\SphinxLogger;
 use PDO;
+use Pluk77\SymfonySphinxBundle\Throttler\ThrottlerFabricInterface;
 
 /**
  * Class Manager
@@ -28,6 +29,11 @@ class Manager
     protected $port;
 
     /**
+     * @var ThrottlerFabricInterface|null
+     */
+    protected $throttlerFabric;
+
+    /**
      * @var PDO
      */
     protected $connection;
@@ -39,11 +45,12 @@ class Manager
      * @param string       $host
      * @param string       $port
      */
-    public function __construct(SphinxLogger $logger, string $host, string $port)
+    public function __construct(SphinxLogger $logger, string $host, string $port, ?ThrottlerFabricInterface $throttlerFabric = null)
     {
         $this->logger = $logger;
         $this->host = $host;
         $this->port = $port;
+        $this->throttlerFabric = $throttlerFabric;
     }
 
     /**
@@ -69,7 +76,7 @@ class Manager
      */
     public function createQuery(): Query
     {
-        return new Query($this->getConnection(), $this->logger);
+        return new Query($this->getConnection(), $this->logger, null, $this->throttlerFabric);
     }
 
     /**

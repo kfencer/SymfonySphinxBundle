@@ -6,6 +6,7 @@ use Doctrine\ORM\QueryBuilder;
 use Pluk77\SymfonySphinxBundle\Logger\SphinxLogger;
 use PDO;
 use PDOStatement;
+use Pluk77\SymfonySphinxBundle\Throttler\ThrottlerFabricInterface;
 
 /**
  * Class Query
@@ -46,6 +47,11 @@ class Query
      * @var SphinxLogger
      */
     protected $logger;
+
+    /**
+     * @var ThrottlerFabricInterface|null
+     */
+    protected $throttlerFabric;
 
     /**
      * @var string|null
@@ -149,11 +155,12 @@ class Query
      * @param SphinxLogger $logger
      * @param string       $query
      */
-    public function __construct(PDO $connection, SphinxLogger $logger, string $query = null)
+    public function __construct(PDO $connection, SphinxLogger $logger, string $query = null, ThrottlerFabricInterface $throttlerFabric = null)
     {
         $this->connection = $connection;
         $this->logger = $logger;
         $this->query = $query;
+        $this->throttlerFabric = $throttlerFabric;
     }
 
     /**
@@ -857,12 +864,24 @@ class Query
             return $this->numRows;
         }
 
+        $SQL = trim($this->getSQL());
+        $isReadOnlyQuery = preg_match('~^SELECT~i', $SQL);
+
+        $throttler = $this->throttlerFabric
+            ? $this->throttlerFabric->getThrottler($this->from, $isReadOnlyQuery)
+            : null
+        ;
+
+        if ($throttler) {
+            $throttler->wait();
+        }
+
         $startTime = microtime(true);
 
         $this->results = [];
         $this->numRows = 0;
 
-        $stmt = $this->createStatement($this->getSQL());
+        $stmt = $this->createStatement($SQL);
 
         if ($stmt->execute()) {
             if ($this->select) {

@@ -1,13 +1,13 @@
-services:        
+services:
     Pluk77\SymfonySphinxBundle\Logger\SphinxLogger:
         autowire: true
         arguments:
             - "@?logger"
         tags:
             - { name: monolog.logger, channel: sphinx }
-            
+
     sphinx.logger: '@Pluk77\SymfonySphinxBundle\Logger\SphinxLogger'
-    
+
     Pluk77\SymfonySphinxBundle\DataCollector\SphinxDataCollector:
         autowire: true
         arguments:
@@ -24,5 +24,6 @@ services:
             - '@sphinx.logger'
             - '%sphinx.host%'
             - '%sphinx.port%'
+            - '@?sphinx.throttler_fabric'
 
     sphinx.manager: '@Pluk77\SymfonySphinxBundle\Sphinx\Manager'
