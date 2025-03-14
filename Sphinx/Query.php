@@ -753,7 +753,7 @@ class Query
                 if ($operator === 'BETWEEN') {
                     $value = $this->quoteValue($value[0]) . ' AND ' . $this->quoteValue($value[1]);
                 } elseif (is_array($value)) {
-                    $value = '(' . implode(', ', array_map([$this, 'quoteValue'], $value)) . ')';
+                    $value = '(' . implode(',', array_map([$this, 'quoteValue'], $value)) . ')';
                 } else {
                     $value = $this->quoteValue($value);
                 }
