@@ -249,6 +249,14 @@ class Query
     }
 
     /**
+     * @return string[]
+     */
+    public function getFrom(): array
+    {
+        return $this->from;
+    }
+
+    /**
      * Creates a new condition for WHERE or HAVING clause.
      *
      * @param string $column
