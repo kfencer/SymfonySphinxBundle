@@ -217,6 +217,21 @@ class Query
     }
 
     /**
+     * Set SELECT clause.
+     *
+     * @param array ...$columns
+     *
+     * @return Query
+     */
+    public function setSelect(...$columns)
+    {
+        $this->select = [];
+        $this->select(...$columns);
+
+        return $this;
+    }
+
+    /**
      * Add single column into SELECT clause.
      *
      * @param string $column
