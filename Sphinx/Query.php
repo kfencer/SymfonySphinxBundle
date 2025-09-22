@@ -148,6 +148,21 @@ class Query
      */
     protected $metadata;
 
+    protected $queryParts = [
+        'select',
+        'from',
+        'where',
+        'match',
+        'rawMatch',
+        'grupBy',
+        'withinGroupOrderBy',
+        'having',
+        'orderBy',
+        'option',
+        'join',
+        'set'
+    ];
+
     /**
      * Query constructor.
      *
@@ -691,7 +706,9 @@ class Query
             throw new \InvalidArgumentException("Unknown query part: $part");
         }
 
-        $this->{$part} = [];
+        if (property_exists($this, $part)) {
+            $this->{$part} = [];
+        }
 
         if ($this->queryBuilder && in_array($part, $this->queryBuilder->getDQLParts())) {
             $this->queryBuilder->resetDQLPart($part);
