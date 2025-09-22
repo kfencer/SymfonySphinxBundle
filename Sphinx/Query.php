@@ -658,6 +658,49 @@ class Query
     }
 
     /**
+     * Resets query parts.
+     *
+     * @param string[]|null $parts
+     *
+     * @return Query
+     * @throws \InvalidArgumentException
+     */
+    public function resetQueryParts($parts = null)
+    {
+        if ($parts === null) {
+            $parts = $this->queryParts;
+        }
+
+        foreach ($parts as $part) {
+            $this->resetQueryPart($part);
+        }
+
+        return $this;
+    }
+
+    /**
+     * Reset query part.
+     * @param string $part
+     *
+     * @return Query
+     * @throws \InvalidArgumentException
+     */
+    public function resetQueryPart(string $part)
+    {
+        if (!in_array($part, $this->queryParts)) {
+            throw new \InvalidArgumentException("Unknown query part: $part");
+        }
+
+        $this->{$part} = [];
+
+        if ($this->queryBuilder && in_array($part, $this->queryBuilder->getDQLParts())) {
+            $this->queryBuilder->resetDQLPart($part);
+        }
+
+        return $this;
+    }
+
+    /**
      * Quote value.
      *
      * @param mixed  $value
