@@ -1076,6 +1076,58 @@ class Query
     }
 
     /**
+     * @param string $index
+     * @param string $searchQuery
+     * @param string[] $texts
+     * @param array $options option names as keys
+     *
+     * @return string[] snippets same order as $texts
+     */
+    public function callSnippets(
+        string $index,
+        string $searchQuery,
+        array $texts,
+        array $options = []
+    ): array {
+        if (!$texts) {
+            return [];
+        }
+
+        $args = [
+            '(' . implode(',', array_map([$this, 'quoteValue'], $texts)) . ')',
+            $this->quoteValue($index),
+            $this->quoteValue($searchQuery)
+        ];
+
+        if ($options) {
+            $optionsValues = [];
+
+            foreach ($options as $option => $value) {
+                if (is_integer($option)) {
+                    $optionsValues[] = $value;
+                } else if ($value === null) {
+                    $optionsValues[] = $option;
+                } else {
+                    if (is_string($value)) {
+                        $value = $this->quoteValue($value);
+                    } else if (is_bool($value)) {
+                        $value = (int) $value;
+                    }
+
+                    $optionsValues[] = $value . ' AS ' . $option;
+                }
+            }
+
+            $args[] = implode(', ', $optionsValues);
+        }
+
+        $query = 'CALL SNIPPETS(' . implode(', ', $args) . ')';
+        $stmt = $this->connection->prepare($query);
+
+        return $stmt->execute() ? $stmt->fetchAll(PDO::FETCH_COLUMN) : [];
+    }
+
+    /**
      * Clones the current object.
      */
     public function __clone()
