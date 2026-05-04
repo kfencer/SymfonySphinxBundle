@@ -1153,8 +1153,15 @@ class Query
             return [];
         }
 
+        $searchQuery = str_replace('"', '' , $searchQuery);
+
+        $textsQuoted = array_map(
+            [$this, 'quoteValue'],
+            $texts
+        );
+
         $args = [
-            '(' . implode(',', array_map([$this, 'quoteValue'], $texts)) . ')',
+            '(' . implode(',', $textsQuoted) . ')',
             $this->quoteValue($index),
             $this->quoteValue($searchQuery)
         ];
